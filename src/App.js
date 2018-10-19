@@ -1,28 +1,35 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
+// ===== APP ROUTES ===== //
+import Routes from "./routes/Routes";
+
+// ===== STATE MANAGEMENT WITH REACT 16 CONTEXT API ===== //
+import StateProvider from './providers/StateProvider';
+
 class App extends Component {
+
+  constructor(props) {
+    super(props);
+  
+    this.state = {};
+  }
+
+  async componentDidMount() {
+    console.log('*** componentDidMount @ App.js ***');
+  }
+
+
   render() {
+    const childProps = {};
+
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
+      <StateProvider>
+        <Routes childProps={childProps}/>
+      </StateProvider>
     );
   }
+
 }
 
 export default App;
