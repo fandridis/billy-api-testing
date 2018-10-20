@@ -14,10 +14,20 @@ class StateProvider extends React.Component {
     this.state = {
       test: 'test from state',
       numTest: 0,
-      changeNumTest: (newNum) => { this.setState({ numTest: newNum }); }
+      changeNumTest: (newNum) => { this.setState({ numTest: newNum }); },
+
+      contacts: [],
+      setContacts: this.setContacts,
+
+      countries: [],
+      setCountries: this.setCountries
     };
   }
 
+  setContacts = contacts => this.setState({ contacts });
+
+  setCountries = countries => this.setState({ countries });
+  
   render() {
     return (
       <StateContext.Provider value={this.state}>
