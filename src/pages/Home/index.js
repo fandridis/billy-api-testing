@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { Grid, Row, Col, Button, DropdownButton, MenuItem } from "react-bootstrap";
+
 import { withState } from '../../HOCs/WithState';
 import WithLoading from '../../HOCs/WithLoading';
 import HttpRequest from '../../utils/HttpRequest';
+
 import ContactsTable from './ContactsTable';
-import { Grid, Row, Col, Button, DropdownButton, MenuItem } from "react-bootstrap";
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 import "./Home.css";
 
@@ -16,7 +19,8 @@ class Home extends Component {
   
     this.state = {
       contactsLoading: true,
-      selectedRowIndex: null
+      selectedRowIndex: null,
+      showConfirmDelete: false
     };
   }
 
@@ -46,20 +50,59 @@ class Home extends Component {
   selectRow = (selectedRowIndex) => {
     console.log('data @ selectRow: ', selectedRowIndex);
     if (this.state.selectedRowIndex === selectedRowIndex) {
-      this.setState({ selectedRowIndex: null })
+      this.clearSelectedRow();
     }
     else {
       this.setState({ selectedRowIndex });
     }
   }
 
-  handleAction = (action) => {
-    console.log('action: ', action)
+  clearSelectedRow() {
+    this.setState({ selectedRowIndex: null })
+  }
+
+  handleAction = async (action) => {
+    if (action === 'delete') {
+      this.setState({ showConfirmDelete: true });
+    }
+    else if (action === 'edit') {
+      // TODO: Edit contact
+    }
+  }
+
+  confirmDelete = (response) => {
+    console.log('response @ confirmDelete: ', response)
+    this.setState({ showConfirmDelete: false });
+    
+    if (response) {
+      this.deleteContact();
+    }
+  }
+
+  async deleteContact() {
+    this.setState({ contactsLoading: true });
+
+    let contactToDelete = this.props.state.contacts[this.state.selectedRowIndex];
+    console.log('contactToDelete: ', contactToDelete);
+
+   const response = await HttpRequest('DELETE', `contacts/${contactToDelete.id}`);
+   console.log('response: ', response);
+   if (response.meta.deletedRecords) {
+    this.clearSelectedRow();
+    this.props.state.removeContact(contactToDelete.id);
+   }
+
+   this.setState({ contactsLoading: false });
   }
 
   render() {
     return (
       <div className="Home__main">
+        <ConfirmationModal 
+          show={this.state.showConfirmDelete} 
+          onClose={this.confirmDelete}
+          text={'Do you really want to make this contact disappear?'}
+        />
         <Grid>
           <Row className="show-grid">
 
@@ -73,7 +116,7 @@ class Home extends Component {
                 <Button type="button" bsStyle="success" bsSize="lg" className="Home__add-btn">Add contact</Button>
               </Link>
 
-              <DropdownButton title="Actions" bsSize="lg" key="1" id={`dropdown-basic-1`}>
+              <DropdownButton disabled={this.state.selectedRowIndex === null} title="Actions" bsSize="lg" key="1" id={`dropdown-basic-1`}>
                 <MenuItem onSelect={this.handleAction} eventKey="edit">Edit</MenuItem>
                 <MenuItem onSelect={this.handleAction} eventKey="delete">Delete</MenuItem>
               </DropdownButton>

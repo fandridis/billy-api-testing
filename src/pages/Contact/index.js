@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import { withState } from '../../HOCs/WithState';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import HttpRequest from '../../utils/HttpRequest';
@@ -98,8 +98,9 @@ class Contact extends Component {
 
   handleSubmit = async event => {
     event.preventDefault();
-
     if (!this.validateForm()) { return; }
+
+    this.setState({ isLoading: true });
 
     let contact = {
       countryId: this.state.countryId,
@@ -119,12 +120,33 @@ class Contact extends Component {
       }
     }
 
-    console.log('contact: ', contact);
+    const response = await HttpRequest('POST', '/contacts', { contact });
 
-    const res = await HttpRequest('POST', '/contacts', { contact });
+    if (response.contacts && response.contacts[0]) {
+      this.props.state.addContact(response.contacts[0]);
 
-    console.log('this.state: ', this.state);
-    console.log('res: ', res);
+      this.clearForm();
+      this.setState({ isLoading: false });
+
+      this.props.history.push('/');
+    }
+  }
+
+  clearForm() {
+    this.setState({
+      countries: [],
+      countryId: 'AF',
+      isCustomer: false,
+      isLoading: true,
+      isSupplier: false,
+      name: '',
+      organizationId: '4rw9eImhQVih1RMWEya3wA',
+      pageTitle: 'Add New Contact',
+      phone: '',
+      registrationNo: '',
+      type: 'company',
+      validationName: null
+    })
   }
 
   render() {
@@ -251,4 +273,4 @@ class Contact extends Component {
 
 }
 
-export default withState(Contact);
+export default withRouter(withState(Contact));

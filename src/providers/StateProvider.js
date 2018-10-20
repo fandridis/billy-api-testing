@@ -18,6 +18,8 @@ class StateProvider extends React.Component {
 
       contacts: [],
       setContacts: this.setContacts,
+      addContact: this.addContact,
+      removeContact: this.removeContact,
 
       countries: [],
       setCountries: this.setCountries
@@ -25,6 +27,15 @@ class StateProvider extends React.Component {
   }
 
   setContacts = contacts => this.setState({ contacts });
+  addContact = contact => {
+    const newContacts = [...this.state.contacts, contact];
+    this.setState({ contacts: newContacts });
+  };
+
+  removeContact = contactId => {
+    const newContacts = this.state.contacts.filter(contact => contact.id !== contactId);
+    this.setState({ contacts: newContacts });
+  }
 
   setCountries = countries => this.setState({ countries });
   
