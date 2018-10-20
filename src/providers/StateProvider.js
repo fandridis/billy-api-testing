@@ -12,10 +12,6 @@ class StateProvider extends React.Component {
     super(props);
 
     this.state = {
-      test: 'test from state',
-      numTest: 0,
-      changeNumTest: (newNum) => { this.setState({ numTest: newNum }); },
-
       contacts: [],
       setContacts: this.setContacts,
       addContact: this.addContact,
@@ -35,7 +31,6 @@ class StateProvider extends React.Component {
   };
 
   updateContact = updatedContact => {
-    console.log('updating the contact: ', updatedContact);
     const newContacts = this.state.contacts.map(contact => {
       if (contact.id === updatedContact.id) {
         return updatedContact;
