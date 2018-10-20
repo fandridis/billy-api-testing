@@ -19,6 +19,7 @@ class StateProvider extends React.Component {
       contacts: [],
       setContacts: this.setContacts,
       addContact: this.addContact,
+      updateContact: this.updateContact,
       removeContact: this.removeContact,
 
       countries: [],
@@ -27,10 +28,22 @@ class StateProvider extends React.Component {
   }
 
   setContacts = contacts => this.setState({ contacts });
-  addContact = contact => {
-    const newContacts = [...this.state.contacts, contact];
+
+  addContact = newContact => {
+    const newContacts = [...this.state.contacts, newContact];
     this.setState({ contacts: newContacts });
   };
+
+  updateContact = updatedContact => {
+    console.log('updating the contact: ', updatedContact);
+    const newContacts = this.state.contacts.map(contact => {
+      if (contact.id === updatedContact.id) {
+        return updatedContact;
+      }
+      return contact;
+    });
+    this.setState({ contacts: newContacts });
+  }
 
   removeContact = contactId => {
     const newContacts = this.state.contacts.filter(contact => contact.id !== contactId);

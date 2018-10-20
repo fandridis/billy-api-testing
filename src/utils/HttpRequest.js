@@ -1,4 +1,5 @@
 import axios from 'axios';
+import config from '../config';
 
 let request = async (method, url, body) => {
   try {
@@ -7,7 +8,7 @@ let request = async (method, url, body) => {
           method,
           url,
           headers: {
-              'X-Access-Token': '64842819136bf5c866a90427c3a8507e7fa00998',
+              'X-Access-Token': config.accessToken,
               'Content-Type': 'application/json'
           },
           data: body

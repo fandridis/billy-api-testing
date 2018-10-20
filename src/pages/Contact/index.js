@@ -20,6 +20,8 @@ class Contact extends Component {
   
     // Keep state object properties in alphabetic order.
     this.state = {
+      comingToEdit: false,
+      contactId: '',
       countries: [],
       countryId: 'AF',
       isCustomer: false,
@@ -36,13 +38,36 @@ class Contact extends Component {
   }
 
   componentDidMount() {
+    if (this.props.match.params.from !== 'new') {
+      // Coming to edit an existing user
+      this.setState({ comingToEdit: true });
+      this.initializeEdit(this.props.match.params.from);
+    }
+
     if (!this.props.state.countries || this.props.state.countries.length === 0) {
       // Countries have not been fetched yet, quering the DB.
       this.fetchCountries();
     }
     else {
       // Countries have already been fetched, no need to query the DB.
-      this.setState({ isLoading: false });
+      this.setState({ countries: this.props.state.countries, isLoading: false });
+    }
+  }
+
+  initializeEdit(id) {
+    const contactToEdit = this.props.state.contacts.find(contact => contact.id === id);
+
+    if (contactToEdit) {
+      this.setState({
+        name: contactToEdit.name,
+        countryId: contactToEdit.countryId,
+        isSupplier: contactToEdit.isSupplier,
+        isCustomer: contactToEdit.isCustomer,
+        type: contactToEdit.type,
+        phone: contactToEdit.phone,
+        registrationNo: contactToEdit.registrationNo,
+        contactId: contactToEdit.id
+      });
     }
   }
 
@@ -65,14 +90,12 @@ class Contact extends Component {
   }
 
   handleChange = event => {
-    console.log('value: ', event.target.value);
     this.setState({
       [event.target.id]: event.target.value
     });
   }
 
   handleChangeType = event => {
-    console.log('event: ', event.target);
     this.setState({
       isSupplier: event.target.checked
     });
@@ -100,6 +123,8 @@ class Contact extends Component {
     event.preventDefault();
     if (!this.validateForm()) { return; }
 
+    const action = this.props.match.params.from === 'new' ? 'POST' : 'PUT';
+
     this.setState({ isLoading: true });
 
     let contact = {
@@ -119,35 +144,25 @@ class Contact extends Component {
         registrationNo: this.state.registrationNo
       }
     }
-
-    const response = await HttpRequest('POST', '/contacts', { contact });
-
-    if (response.contacts && response.contacts[0]) {
-      this.props.state.addContact(response.contacts[0]);
-
-      this.clearForm();
-      this.setState({ isLoading: false });
-
-      this.props.history.push('/');
+    
+    if (action === 'POST') {
+      const response = await HttpRequest(action, '/contacts', { contact });
+      if (response.contacts && response.contacts[0]) {
+        this.props.state.addContact(response.contacts[0]);
+      }
     }
+    else if (action === 'PUT') {
+      const response = await HttpRequest(action, `/contacts/${this.state.contactId}`, { contact });
+      if (response.contacts && response.contacts[0]) {
+        this.props.state.updateContact(response.contacts[0]);
+      }
+    }
+
+    this.setState({ isLoading: false });
+    this.props.history.push('/');
   }
 
-  clearForm() {
-    this.setState({
-      countries: [],
-      countryId: 'AF',
-      isCustomer: false,
-      isLoading: true,
-      isSupplier: false,
-      name: '',
-      organizationId: '4rw9eImhQVih1RMWEya3wA',
-      pageTitle: 'Add New Contact',
-      phone: '',
-      registrationNo: '',
-      type: 'company',
-      validationName: null
-    })
-  }
+
 
   render() {
     if (this.state.isLoading) { return this.renderLoading(); }
@@ -174,93 +189,101 @@ class Contact extends Component {
                   <FontAwesomeIcon icon={faArrowLeft} />
                 </Link>
               </Col>
+            </Row>
 
-            {/* PAGE TITLE */}
-            <Col xs={12}>
-              <div className="Contact__page-title">
-                <h1>{this.state.pageTitle}</h1>
-              </div>
-            </Col>
+            <Row>
+              {/* PAGE TITLE */}
+              <Col xs={12}>
+                <div className="Contact__page-title">
+                  <h1>{this.state.pageTitle}</h1>
+                </div>
+              </Col>
+            </Row>
 
-           {/* COMPANY / PERSON SELECTION */}
-            <Col xs={12}>
-              <FormGroup>
-                <Radio
-                  checked={this.state.type === 'company' ? true : false}
-                  value="company"
-                  onChange={this.handleChange}
-                  name="type" id="type" inline>
-                  Company
-                </Radio>
-                <Radio
-                  value="person"
-                  onChange={this.handleChange}
-                  name="type"
-                  id="type" inline >
-                  Person
-                </Radio>
-              </FormGroup>
-            </Col>
+            <Row>
+              {/* COMPANY / PERSON SELECTION */}
+              <Col xs={12}>
+                <FormGroup>
+                  <Radio
+                    checked={this.state.type === 'company' ? true : false}
+                    value="company"
+                    onChange={this.handleChange}
+                    name="type" id="type" inline>
+                    Company
+                  </Radio>
+                  <Radio
+                  checked={this.state.type === 'person' ? true : false}
+                    value="person"
+                    onChange={this.handleChange}
+                    name="type"
+                    id="type" inline >
+                    Person
+                  </Radio>
+                </FormGroup>
+              </Col>
+            </Row>
             
-            {/* NAME */}
-            <Col xs={12} md={6}>
-              <FormGroup controlId="name" bsSize="large" validationState={this.state.validationName}>
-                <ControlLabel>Name</ControlLabel>
-                <FormControl
-                  value={this.state.name}
-                  onChange={this.handleChange}
-                  type="text"
-                />
-                {this.state.validationName === 'error' && <HelpBlock>Please provide a name.</HelpBlock>}
-              </FormGroup>
-
-              {/* REGISTRATION NUMBER (IF COMPANY) */}
-              { this.state.type === 'company' &&
-                <FormGroup controlId="registrationNo" bsSize="large">
-                  <ControlLabel>Registration Number</ControlLabel>
+            <Row>
+              {/* NAME */}
+              <Col xs={12} md={6}>
+                <FormGroup controlId="name" bsSize="large" validationState={this.state.validationName}>
+                  <ControlLabel>Name</ControlLabel>
                   <FormControl
-                    value={this.state.registrationNo}
+                    value={this.state.name}
+                    onChange={this.handleChange}
+                    type="text"
+                  />
+                  {this.state.validationName === 'error' && <HelpBlock>Please provide a name.</HelpBlock>}
+                </FormGroup>
+
+                {/* REGISTRATION NUMBER (IF COMPANY) */}
+                { this.state.type === 'company' &&
+                  <FormGroup controlId="registrationNo" bsSize="large">
+                    <ControlLabel>Registration Number</ControlLabel>
+                    <FormControl
+                      value={this.state.registrationNo}
+                      onChange={this.handleChange}
+                      type="number"
+                    />
+                  </FormGroup>
+                }
+
+                {/* PHONE */}
+                <FormGroup controlId="phone" bsSize="large">
+                  <ControlLabel>phone</ControlLabel>
+                  <FormControl
+                    value={this.state.phone}
                     onChange={this.handleChange}
                     type="number"
                   />
                 </FormGroup>
-              }
+              </Col>
 
-              {/* PHONE */}
-              <FormGroup controlId="phone" bsSize="large">
-                <ControlLabel>phone</ControlLabel>
-                <FormControl
-                  value={this.state.phone}
-                  onChange={this.handleChange}
-                  type="number"
-                />
-              </FormGroup>
-            </Col>
+              {/* COUNTRY */}
+              <Col xs={12} md={6}>
+                <FormGroup controlId="formControlsSelect">
+                  <ControlLabel>Select Country</ControlLabel>
+                  <FormControl
+                    bsSize="large"
+                    componentClass="select"
+                    placeholder="Select a country"
+                    value={this.state.countryId} 
+                    onChange={this.handleChangeCountry}>
+                    {this.state.countries.map(country => {
+                      return <option key={country.id} value={country.name}>{country.name}</option>
+                    })}
+                  </FormControl>
+                </FormGroup>
 
-            {/* COUNTRY */}
-            <Col xs={12} md={6}>
-              <FormGroup controlId="formControlsSelect">
-                <ControlLabel>Select Country</ControlLabel>
-                <FormControl
-                  bsSize="large"
-                  componentClass="select"
-                  placeholder="Select a country"
-                  value={this.state.countryId} 
-                  onChange={this.handleChangeCountry}>
-                  {this.state.countries.map(country => {
-                    return <option key={country.id} value={country.name}>{country.name}</option>
-                  })}
-                </FormControl>
-              </FormGroup>
+                {/* CUSTOMER-SUPPLIER OPTIONS */}
+                <FormGroup>
+                  <Checkbox checked={this.state.isCustomer} onChange={this.handleChangeIsCustomer}>Customer</Checkbox> 
+                  <Checkbox checked={this.state.isSupplier} onChange={this.handleChangeIsSupplier}>Supplier</Checkbox> 
+                </FormGroup>
+              </Col>
+            </Row>
 
-              {/* CUSTOMER-SUPPLIER OPTIONS */}
-              <FormGroup>
-                <Checkbox value={this.state.isCustomer} onChange={this.handleChangeIsCustomer}>Customer</Checkbox> 
-                <Checkbox value={this.state.isSupplier} onChange={this.handleChangeIsSupplier}>Supplier</Checkbox> 
-              </FormGroup>
-
-            </Col>
-
+            <Row>
             <Col cs={12} md={12}>
             <Button type="submit" bsStyle="success">Submit</Button>
             </Col>

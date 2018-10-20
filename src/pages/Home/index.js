@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import { Grid, Row, Col, Button, DropdownButton, MenuItem } from "react-bootstrap";
 
 import { withState } from '../../HOCs/WithState';
@@ -25,9 +25,6 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    console.log('*** componentDidMount @ Home ***');
-    console.log('this.props @ Home.js: ', this.props);
-
     if (!this.props.state.contacts || this.props.state.contacts.length === 0) {
       // Contacts have not been fetched yet, quering the DB.
       this.fetchContacts();
@@ -48,7 +45,6 @@ class Home extends Component {
   }
 
   selectRow = (selectedRowIndex) => {
-    console.log('data @ selectRow: ', selectedRowIndex);
     if (this.state.selectedRowIndex === selectedRowIndex) {
       this.clearSelectedRow();
     }
@@ -66,12 +62,12 @@ class Home extends Component {
       this.setState({ showConfirmDelete: true });
     }
     else if (action === 'edit') {
-      // TODO: Edit contact
+      const contactToEdit = this.props.state.contacts[this.state.selectedRowIndex];
+      this.props.history.push(`/contact/${contactToEdit.id}`);
     }
   }
 
   confirmDelete = (response) => {
-    console.log('response @ confirmDelete: ', response)
     this.setState({ showConfirmDelete: false });
     
     if (response) {
@@ -83,16 +79,16 @@ class Home extends Component {
     this.setState({ contactsLoading: true });
 
     let contactToDelete = this.props.state.contacts[this.state.selectedRowIndex];
-    console.log('contactToDelete: ', contactToDelete);
+    if (!contactToDelete) { return; }
 
-   const response = await HttpRequest('DELETE', `contacts/${contactToDelete.id}`);
-   console.log('response: ', response);
-   if (response.meta.deletedRecords) {
-    this.clearSelectedRow();
-    this.props.state.removeContact(contactToDelete.id);
-   }
+    const response = await HttpRequest('DELETE', `contacts/${contactToDelete.id}`);
 
-   this.setState({ contactsLoading: false });
+    if (response.meta.deletedRecords) {
+      this.clearSelectedRow();
+      this.props.state.removeContact(contactToDelete.id);
+    }
+
+    this.setState({ contactsLoading: false });
   }
 
   render() {
@@ -141,4 +137,4 @@ class Home extends Component {
 
 }
 
-export default withState(Home);
+export default withRouter(withState(Home));

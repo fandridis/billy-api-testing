@@ -17,9 +17,10 @@ describe('<WithLoading />', () => {
 
   it('should render the IndicatorComponent if isloading and indicatorType === "squares"', () => {
     const renderedComponent = shallow(<ComponentWithLoading isLoading={true} indicatorType="squares" />);
-    const includeLoadingIndicator = renderedComponent.html().includes('<div class="sk-folding-cube');
 
-    expect(includeLoadingIndicator === true);
+    expect(renderedComponent.html()).toEqual(
+      expect.stringContaining('<div class="sk-folding-cube'),
+    );
   });
 
   it('should render the real component if !isloading', () => {
