@@ -102,6 +102,7 @@ class Contact extends Component {
   }
 
   handleChangeCountry = event => {
+    console.log('event.target.value: ', event.target.value);
     this.setState({
       countryId: event.target.value
     });
@@ -270,7 +271,7 @@ class Contact extends Component {
                     value={this.state.countryId} 
                     onChange={this.handleChangeCountry}>
                     {this.state.countries.map(country => {
-                      return <option key={country.id} value={country.name}>{country.name}</option>
+                      return <option key={country.id} value={country.id}>{country.name}</option>
                     })}
                   </FormControl>
                 </FormGroup>
