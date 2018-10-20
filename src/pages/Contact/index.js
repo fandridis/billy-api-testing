@@ -40,7 +40,7 @@ class Contact extends Component {
   componentDidMount() {
     if (this.props.match.params.from !== 'new') {
       // Coming to edit an existing user
-      this.setState({ comingToEdit: true });
+      this.setState({ comingToEdit: true, pageTitle: 'Edit Contact' });
       this.initializeEdit(this.props.match.params.from);
     }
 
